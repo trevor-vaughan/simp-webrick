@@ -71,6 +71,8 @@ class Puppet::Network::HTTP::WEBrick
 
     file = Puppet[:masterhttplog]
 
+    file ||= "#{Puppet[:logdir]}/masterhttp.log"
+
     # open the log manually to prevent file descriptor leak
     # webrick logged strings may contain UTF-8
     file_io = ::File.open(file, "a+:UTF-8")

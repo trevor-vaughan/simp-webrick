@@ -7,5 +7,4 @@ bundle exec puppet master \
   --logdir $PWD/rundir/log/puppetlabs/puppetmaster \
   --rundir $PWD/rundir/run/puppetlabs/puppetmaster \
   --codedir $PWD/rundir/etc/puppetlabs/code \
-  --masterhttplog $PWD/rundir/log/puppetlabs/puppetmaster/master.log \
   --trace
