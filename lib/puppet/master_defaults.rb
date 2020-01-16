@@ -41,6 +41,13 @@ module Puppet
   )
 
   # Work around deprecation notices
-  settings.instance_variable_get('@deprecated_setting_names').delete(:ssl_server_ca_auth)
+  deprecated_settings_to_ignore = [
+    :ssl_server_ca_auth,
+    :rest_authconfig,
+    :authconfig
+  ]
 
+  deprecated_settings_to_ignore.each do |setting|
+    settings.instance_variable_get('@deprecated_setting_names').delete(setting)
+  end
 end
