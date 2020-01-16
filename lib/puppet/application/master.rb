@@ -20,11 +20,6 @@ class Puppet::Application::Master < Puppet::Application
     handle_logdest_arg(arg)
   end
 
-  option("--parseonly") do |args|
-    puts "--parseonly has been removed. Please use 'puppet parser validate <manifest>'"
-    exit 1
-  end
-
   def summary
     _("The puppet master daemon")
   end

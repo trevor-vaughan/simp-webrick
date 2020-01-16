@@ -1,0 +1,11 @@
+#!/bin/sh
+
+bundle exec puppet master \
+  --no-daemonize \
+  --confdir $PWD/rundir/puppet \
+  --vardir $PWD/rundir/server/data/puppetmaster \
+  --logdir $PWD/rundir/log/puppetlabs/puppetmaster \
+  --rundir $PWD/rundir/run/puppetlabs/puppetmaster \
+  --codedir $PWD/rundir/etc/puppetlabs/code \
+  --masterhttplog $PWD/rundir/log/puppetlabs/puppetmaster/master.log \
+  --trace

@@ -9,16 +9,41 @@ $0 = "master"
 # if you want debugging:
 # ARGV << "--debug"
 
+if ARGV.include?('--')
+  passthrough = ARGV[ARGV.index('--')+1..-1]
+  ARGV.clear
+
+  passthrough.each do |arg|
+    ARGV << arg
+  end
+else
+  ARGV.clear
+end
+
 ARGV << "--rack"
 
 # Rack applications typically don't start as root.  Set --confdir, --vardir,
 # --logdir, --rundir to prevent reading configuration from
 # ~/ based pathing.
+
+=begin
 ARGV << "--confdir" << "/etc/puppetlabs/puppet"
 ARGV << "--vardir"  << "/opt/puppetlabs/server/data/puppetmaster"
 ARGV << "--logdir"  << "/var/log/puppetlabs/puppetmaster"
 ARGV << "--rundir"  << "/var/run/puppetlabs/puppetmaster"
 ARGV << "--codedir"  << "/etc/puppetlabs/code"
+=end
+
+FileUtils.mkdir_p('rundir/puppet')
+FileUtils.mkdir_p('rundir/server/data/puppetmaster')
+FileUtils.mkdir_p('rundir/log/puppetlabs/puppetmaster')
+FileUtils.mkdir_p('rundir/run/puppetlabs/puppetmaster')
+FileUtils.mkdir_p('rundir/etc/puppetlabs/code')
+ARGV << "--confdir" << "rundir/puppet"
+ARGV << "--vardir"  << "rundir/server/data/puppetmaster"
+ARGV << "--logdir"  << "rundir/log/puppetlabs/puppetmaster"
+ARGV << "--rundir"  << "rundir/run/puppetlabs/puppetmaster"
+ARGV << "--codedir"  << "rundir/etc/puppetlabs/code"
 
 # disable always_retry_plugsin as a performance improvement. This is safe for a master to
 # apply. This is intended to allow agents to recognize new features that may be
@@ -41,4 +66,3 @@ require 'puppet/util/command_line'
 # we're usually running inside a Rack::Builder.new {} block,
 # therefore we need to call run *here*.
 run Puppet::Util::CommandLine.new.execute
-
