@@ -22,4 +22,8 @@ MASSIVE WORK IN PROGRESS...but seems to work :-D
 
 ## TODO
 
+* [] Attach some clients
 * [] Autoscale puppetmaster compilers as a cluster
+* [] Compare and contrast to the "real thing"
+* [] Create a shared volume for the CA materials
+* [] Create a shared volume for the environment code
