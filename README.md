@@ -9,7 +9,7 @@ MASSIVE WORK IN PROGRESS...but seems to work :-D
 * Install `minikube`
 * `minikube start`
 * Run a local registry
-  * `kubectl create -f local_registry.yml`
+  * `kubectl create -f k8s/local_registry.yml`
   * `kubectl port-forward --namespace kube-system $(kubectl get pod -n kube-system | grep kube-registry-v0 | \awk '{print $1;}') 5000:5000`
 * Create the container image
   * `buildah bud -t puppetmaster:latest -f Dockerfile`
@@ -18,12 +18,18 @@ MASSIVE WORK IN PROGRESS...but seems to work :-D
 * Push the container image
   * `podman push localhost/puppetmaster localhost:5000/puppetmaster`
 * Run the pod
-  * `kubectl create -f puppetmaster.yml`
+  * `kubectl create -f k8s/puppetmaster.yml`
+
+### Running a Cluster
+* Enable the puppetmaster cluster
+  * `kubectl apply -f k8s/puppetmaster_deployment.yml`
+* Expose the port
+  * `minikube addons enable ingress`
 
 ## TODO
 
 * [] Attach some clients
-* [] Autoscale puppetmaster compilers as a cluster
+* [X] Autoscale puppetmaster compilers as a cluster
 * [] Compare and contrast to the "real thing"
 * [] Create a shared volume for the CA materials
 * [] Create a shared volume for the environment code
