@@ -4,6 +4,11 @@ Forked from https://github.com/puppetlabs/puppet commit `fd4024d`
 
 MASSIVE WORK IN PROGRESS...but seems to work :-D
 
+## Steps for Running in podman
+
+* podman build --tag "puppet_webrick" --file Dockerfile
+* podman run -p 8140:8140 -id puppet_webrick
+
 ## Steps for Running in minikube
 
 * Install `minikube`

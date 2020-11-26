@@ -1,7 +1,5 @@
 require 'puppet/master_defaults'
 require 'puppet/application'
-require 'puppet/daemon'
-require 'puppet/util/pidlock'
 
 class Puppet::Application::Master < Puppet::Application
 
@@ -279,7 +277,10 @@ Copyright (c) 2012 Puppet Inc., LLC Licensed under the Apache 2.0 License
   # This method will block until the master exits.
   def start_webrick_master
     require 'puppet/network/server'
-    daemon = Puppet::Daemon.new(Puppet::Util::Pidlock.new(Puppet[:pidfile]))
+    require 'puppet/webrick_server/daemon'
+    require 'puppet/util/pidlock'
+
+    daemon = Puppet::WebrickServer::Daemon.new(Puppet::Util::Pidlock.new(Puppet[:pidfile]))
 
     daemon.argv = @argv
     daemon.server = Puppet::Network::Server.new(Puppet[:bindaddress], Puppet[:masterport])
