@@ -7,7 +7,7 @@ MASSIVE WORK IN PROGRESS...but seems to work :-D
 ## Steps for Running in podman
 
 * podman build --tag "puppet_webrick" --file Dockerfile
-* podman run --hostname puppet -p 8140:8140 -id puppet_webrick
+* podman run --hostname puppet -p 8140:8140 -d puppet_webrick
 
 ## Steps for Running in minikube
 

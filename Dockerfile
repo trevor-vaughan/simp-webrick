@@ -4,7 +4,8 @@ WORKDIR /home/root/puppetmaster
 
 RUN yum -y install http://yum.puppet.com/puppet-release-el-8.noarch.rpm
 RUN yum -y install puppet-agent
-#RUN yum -y install puppetserver
+# Force update to the latest puppet gem
+#RUN /opt/puppetlabs/puppet/bin/gem install --force --no-ri --no-rdoc puppet
 
 RUN useradd -m puppet
 
