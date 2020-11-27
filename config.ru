@@ -4,6 +4,8 @@
 # if puppet is not in your RUBYLIB:
 # $LOAD_PATH.unshift('/opt/puppet/lib')
 
+$LOAD_PATH.unshift('/usr/share/puppet_webrick/lib')
+
 $0 = "master"
 
 # if you want debugging:

@@ -1,0 +1,34 @@
+FROM centos:8
+
+WORKDIR /home/root/puppetmaster
+
+RUN yum -y install http://yum.puppet.com/puppet-release-el-8.noarch.rpm
+RUN yum -y install puppet-agent
+
+RUN yum -y install epel-release
+RUN yum -y install mod_passenger mod_ssl httpd-devel
+
+RUN mv /etc/httpd/conf.d/ssl.conf /etc/httpd/conf.d/ssl.bak
+
+RUN sed -i 's|PassengerRoot.*|PassengerRoot /usr/share/ruby/vendor_ruby/phusion_passenger/locations.ini|' /etc/httpd/conf.d/passenger.conf
+
+RUN mkdir /var/run/passenger-instreg
+RUN chown apache /var/run/passenger-instreg
+
+RUN yum -y install ca-certificates
+
+RUN useradd -m puppet
+
+RUN /opt/puppetlabs/puppet/bin/gem install rack --no-ri --no-rdoc
+
+RUN mkdir -p /usr/share/puppet/server/{public,tmp}
+ADD config.ru /usr/share/puppet/server/config.ru
+RUN chown -R puppet /usr/share/puppet
+
+ADD puppet_apache.conf /etc/httpd/conf.d/puppet_apache.conf
+
+ADD . /usr/share/puppet_webrick
+
+RUN /usr/share/puppet_webrick/puppetca
+
+CMD ["/usr/sbin/httpd", "-D", "FOREGROUND"]
