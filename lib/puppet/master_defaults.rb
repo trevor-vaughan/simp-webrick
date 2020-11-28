@@ -1,27 +1,35 @@
 require 'puppet/util/platform'
 
 module Puppet
-  define_settings(:master,
-    :masterhttplog => {
-      :default => "$logdir/masterhttp.log",
+  settings_target = :master
+
+  if settings[:serverport]
+    settings_target = :server
+  end
+
+  settings.preferred_run_mode = "#{settings_target}"
+
+  settings.define_settings(settings_target,
+    :"#{settings_target}httplog" => {
+      :default => "$logdir/#{settings_target}http.log",
       :type => :file,
       :owner => "service",
       :group => "service",
       :mode => "0660",
       :create => true,
-      :desc => "Where the puppet master web server saves its access log. This is
-        only used when running a WEBrick puppet master. When puppet master is
+      :desc => "Where the puppet #{settings_target} web server saves its access log. This is
+        only used when running a WEBrick puppet #{settings_target}. When puppet #{settings_target} is
         running under a Rack server like Passenger, that web server will have
         its own logging behavior."
     },
     :ca => {
       :default    => true,
       :type       => :boolean,
-      :desc       => "Whether the master should function as a certificate authority.",
+      :desc       => "Whether the #{settings_target} should function as a certificate authority.",
     }
   )
 
-  define_settings(:ca,
+  settings.define_settings(:ca,
     :caprivatedir => {
       :default => "$cadir/private",
       :type => :directory,

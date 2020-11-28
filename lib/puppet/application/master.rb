@@ -3,8 +3,6 @@ require 'puppet/application'
 
 class Puppet::Application::Master < Puppet::Application
 
-  run_mode :master
-
   option("--debug", "-d")
   option("--verbose", "-v")
 
@@ -261,7 +259,7 @@ Copyright (c) 2012 Puppet Inc., LLC Licensed under the Apache 2.0 License
 
     exit(Puppet.settings.print_configs ? 0 : 1) if Puppet.settings.print_configs?
 
-    Puppet.settings.use :main, :master, :ssl, :metrics
+    Puppet.settings.use :main, Puppet.settings.preferred_run_mode.to_sym, :ssl, :metrics
 
     setup_terminuses
 
@@ -283,7 +281,10 @@ Copyright (c) 2012 Puppet Inc., LLC Licensed under the Apache 2.0 License
     daemon = Puppet::WebrickServer::Daemon.new(Puppet::Util::Pidlock.new(Puppet[:pidfile]))
 
     daemon.argv = @argv
-    daemon.server = Puppet::Network::Server.new(Puppet[:bindaddress], Puppet[:masterport])
+    port = Puppet[:masterport]
+    port = Puppet[:serverport] if Puppet[:serverport]
+
+    daemon.server = Puppet::Network::Server.new(Puppet[:bindaddress], port)
     daemon.daemonize if Puppet[:daemonize]
 
     # Setup signal traps immediately after daemonization so we clean up the daemon

@@ -1,10 +1,8 @@
+require 'puppet/master_defaults'
 require 'puppet/application'
 require 'puppet/ssl/certificate_authority/interface'
 
 class Puppet::Application::Cert < Puppet::Application
-
-  run_mode :master
-
   attr_accessor :all, :ca, :digest, :signed
 
   def subcommand
@@ -306,6 +304,8 @@ Copyright (c) 2011 Puppet Inc., LLC Licensed under the Apache 2.0 License
     end
 
     begin
+      Puppet.settings.use :main, Puppet.settings.preferred_run_mode.to_sym, :ssl, :ca
+
       @ca = Puppet::SSL::CertificateAuthority.new
     rescue => detail
       Puppet.log_exception(detail)

@@ -70,6 +70,7 @@ class Puppet::Network::HTTP::WEBrick
     Puppet.settings.use(:main, :ssl, :application)
 
     file = Puppet[:masterhttplog]
+    file = Puppet[:serverhttplog] if Puppet[:serverhttplog]
 
     # open the log manually to prevent file descriptor leak
     # webrick logged strings may contain UTF-8

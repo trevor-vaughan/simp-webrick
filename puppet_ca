@@ -1,0 +1,6 @@
+#!/opt/puppetlabs/puppet/bin/ruby
+
+$LOAD_PATH.unshift(File.expand_path(File.join(__dir__, 'lib')))
+
+require 'puppet/util/command_line'
+Puppet::Util::CommandLine.new('cert', ARGV).execute

@@ -12,13 +12,7 @@ require 'fileutils'
 FileUtils.mkdir_p(required_directories)
 FileUtils.chown_R('puppet', 'puppet', required_directories)
 
-# For some reason, the CA directory and items are not getting chown'd properly
-# Since we're running this in single-point containers, there really isn't
-# anything to get broken into.
-#
-# We should try to fix this in the future, but it may become largely irrelevant
-# if all goes to plan.
-args = ['--no-daemonize', '--user=root', '--group=root']
+args = ARGV
 
 require 'puppet/util/command_line'
 Puppet::Util::CommandLine.new('master', args).execute
