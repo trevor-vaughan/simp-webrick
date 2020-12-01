@@ -18,7 +18,7 @@ Gem::Specification.new do |s|
   s.metadata = {
                  'issue_tracker' => 'https://simp-project.atlassian.net'
                }
-  s.add_runtime_dependency 'puppet'                    , '~> 6.0'
+  s.add_runtime_dependency 'puppet', ['>= 6.0', '< 8.0']
 
   ### s.files = Dir['Rakefile', '{bin,lib,spec}/**/*', 'README*', 'LICENSE*'] & `git ls-files -z .`.split("\0")
   s.files       = `git ls-files`.split("\n")

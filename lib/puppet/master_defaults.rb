@@ -9,6 +9,9 @@ module Puppet
 
   settings.preferred_run_mode = "#{settings_target}"
 
+  # Override for compatibility with Puppet 7+
+  settings[:cadir] = File.join(settings[:ssldir], 'ca')
+
   settings.define_settings(settings_target,
     :"#{settings_target}httplog" => {
       :default => "$logdir/#{settings_target}http.log",

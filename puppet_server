@@ -2,15 +2,22 @@
 
 $LOAD_PATH.unshift(File.expand_path(File.join(__dir__, 'lib')))
 
-required_directories = [
-  '/etc/puppetlabs/puppet',
-  '/etc/puppetlabs/code/environments',
-  '/var/run/puppet'
-]
+fork{
+  require 'puppet'
 
-require 'fileutils'
-FileUtils.mkdir_p(required_directories)
-FileUtils.chown_R('puppet', 'puppet', required_directories)
+  Puppet.initialize_settings(['--section=master'], false)
+
+  required_directories = [
+    Puppet.settings[:confdir],
+    Puppet.settings[:environmentpath],
+    Puppet.settings[:vardir],
+    Puppet.settings[:logdir]
+  ]
+
+  require 'fileutils'
+  FileUtils.mkdir_p(required_directories)
+  FileUtils.chown_R('puppet', 'puppet', required_directories) if (Process.uid == 0)
+}
 
 args = ARGV
 

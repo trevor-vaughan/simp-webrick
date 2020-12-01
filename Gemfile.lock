@@ -2,7 +2,7 @@ PATH
   remote: .
   specs:
     simp-webrick (0.0.1)
-      puppet (~> 6.0)
+      puppet (>= 6.0, < 8.0)
 
 GEM
   remote: https://rubygems.org/
