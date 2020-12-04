@@ -10,6 +10,8 @@
   * [Beginning with simp-webrick](#beginning-with-simp-webrick)
     * [Running from Ruby](#running-from-ruby)
     * [Running in podman](#running-in-podman)
+      * [Standalone Compiler](#standalone-compiler)
+      * [Behind Passenger](#behind-passenger)
     * [Running in minikube](#running-in-minikube)
       * [Running a Cluster](#running-a-cluster)
 * [TODO](#todo)
@@ -51,8 +53,15 @@ bundle exec ruby puppet_server --no-daemonize --debug -v
 
 #### Running in podman
 
+##### Standalone Compiler
+
 * podman build --tag "puppet_webrick" --file Dockerfile
 * podman run --hostname puppet -p 8140:8140 -d puppet_webrick
+
+##### Behind Passenger
+
+* podman build --tag "puppet_passenger" --file Dockerfile.passenger
+* podman run --hostname puppet -p 8140:8140 -d puppet_passenger
 
 #### Running in minikube
 
