@@ -1,15 +1,60 @@
+![](assets/product-demonstration.jpg)
 # Recreate the Ruby puppet server
 
-Forked from https://github.com/puppetlabs/puppet commit `fd4024d`
+#### Table of Contents
+<!-- vim-markdown-toc GFM -->
 
-MASSIVE WORK IN PROGRESS...but seems to work :-D
+* [Description](#description)
+* [Setup](#setup)
+  * [Requirements](#requirements)
+  * [Beginning with simp-webrick](#beginning-with-simp-webrick)
+    * [Running from Ruby](#running-from-ruby)
+    * [Running in podman](#running-in-podman)
+    * [Running in minikube](#running-in-minikube)
+      * [Running a Cluster](#running-a-cluster)
+* [TODO](#todo)
 
-## Steps for Running in podman
+<!-- vim-markdown-toc -->
+
+## Description
+
+* Want an easy-to-scale Puppet Server that's quick to start and a LOT lighter
+  than [Trapperkeeper]?
+* Missing the days of running `puppet master --no-daemonize --debug --verbose`
+  to debug your janky server-side compiles?
+* Good news: **This project is for you!**
+
+Forked from https://github.com/puppetlabs/puppet, commit [`fd4024d`]—the final
+commit before the tragic merge of [puppet#6794].
+
+:fire::warning::fire:
+WARNING: **MASSIVE WORK IN PROGRESS** _(…but it seems to work :-D)_
+:fire::warning::fire:
+
+## Setup
+
+### Requirements
+
+For executing directly with Ruby:
+
+* [Ruby]
+* [Bundler]
+
+### Beginning with simp-webrick
+
+#### Running from Ruby
+
+```sh
+bundle update
+bundle exec ruby puppet_server --no-daemonize --debug -v
+```
+
+#### Running in podman
 
 * podman build --tag "puppet_webrick" --file Dockerfile
 * podman run --hostname puppet -p 8140:8140 -d puppet_webrick
 
-## Steps for Running in minikube
+#### Running in minikube
 
 * Install `minikube`
 * `minikube start`
@@ -25,7 +70,8 @@ MASSIVE WORK IN PROGRESS...but seems to work :-D
 * Run the pod
   * `kubectl create -f k8s/puppetmaster.yml`
 
-### Running a Cluster
+##### Running a Cluster
+
 * Enable the puppetmaster cluster
   * `kubectl apply -f k8s/puppetmaster_deployment.yml`
 * Expose the port
@@ -33,8 +79,15 @@ MASSIVE WORK IN PROGRESS...but seems to work :-D
 
 ## TODO
 
-* [] Attach some clients
-* [X] Autoscale puppetmaster compilers as a cluster
-* [] Compare and contrast to the "real thing"
-* [] Create a shared volume for the CA materials
-* [] Create a shared volume for the environment code
+* [ ] Attach some clients
+* [x] Autoscale puppetmaster compilers as a cluster
+* [ ] Compare and contrast to the "real thing"
+* [ ] Create a shared volume for the CA materials
+* [ ] Create a shared volume for the environment code
+
+[ruby]: https://www.ruby-lang.org
+[bundler]: https://bundler.io
+[`fd4024d`]: https://github.com/puppetlabs/puppet/tree/fd4024d
+[`9275e62`]: https://github.com/puppetlabs/puppet/commit/9275e62
+[trapperkeeper]: https://github.com/puppetlabs/trapperkeeper
+[puppet#6794]: https://github.com/puppetlabs/puppet/pull/6794
