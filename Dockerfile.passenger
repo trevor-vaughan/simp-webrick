@@ -1,9 +1,16 @@
+# buildah bud --layers --tag puppet_passenger -f Dockerfile.passenger
+# podman run --hostname puppet.int.localdomain -p 8140:8140 -it puppet_passenger
+
 FROM centos:8
 
 WORKDIR /home/root/puppetmaster
 
 RUN yum -y install http://yum.puppet.com/puppet-release-el-8.noarch.rpm
 RUN yum -y install puppet-agent
+
+# For compiling gems
+RUN yum -y install libyaml glibc-headers autoconf gcc gcc-c++ glibc-devel readline-devel make automake libtool bison sqlite-devel
+RUN /opt/puppetlabs/puppet/bin/gem install msgpack --no-document
 
 RUN yum -y install epel-release
 RUN yum -y install mod_passenger mod_ssl httpd-devel passenger-devel
@@ -23,7 +30,7 @@ ADD ./conf/auth.conf /etc/puppetlabs/puppet/auth.conf
 RUN chown puppet:puppet /etc/puppetlabs/puppet/auth.conf
 RUN chmod o-rwx /etc/puppetlabs/puppet/auth.conf
 
-RUN /opt/puppetlabs/puppet/bin/gem install rack --no-ri --no-rdoc
+RUN /opt/puppetlabs/puppet/bin/gem install rack --no-document
 
 RUN mkdir -p /usr/share/puppet/server/{public,tmp}
 ADD ext/rack/config.ru /usr/share/puppet/server/config.ru
@@ -33,6 +40,8 @@ ADD puppet_apache.conf /etc/httpd/conf.d/puppet_apache.conf
 
 ADD . /usr/share/puppet_webrick
 
-RUN /usr/share/puppet_webrick/puppetca
+RUN /usr/share/puppet_webrick/puppet_ca list --all
+
+RUN /usr/share/puppet_webrick/puppet_ca generate puppet.int.localdomain
 
 CMD ["/usr/sbin/httpd", "-D", "FOREGROUND"]

@@ -1,6 +1,25 @@
 require 'puppet/util/platform'
 
 module Puppet
+
+  # Overrides for compatibility with Puppet 7+
+  settings[:cadir] = File.join(settings[:ssldir], 'ca')
+
+  # Default binding setup from the puppet 6 puppet.rb
+  default_bindings = @context
+    .instance_variable_get('@stack')
+    .instance_variable_get('@default')
+    .instance_variable_get('@bindings')
+
+  default_bindings[:http_pool] = proc {
+    require 'puppet/network/http'
+    Puppet::Network::HTTP::NoCachePool.new
+  }
+
+  default_bindings[:ssl_host] = proc { Puppet::SSL::Host.localhost }
+
+  default_bindings[:certificate_revocation] = proc { Puppet[:certificate_revocation] }
+
   settings_target = :master
 
   if settings[:serverport]
@@ -8,9 +27,6 @@ module Puppet
   end
 
   settings.preferred_run_mode = "#{settings_target}"
-
-  # Override for compatibility with Puppet 7+
-  settings[:cadir] = File.join(settings[:ssldir], 'ca')
 
   settings.define_settings(settings_target,
     :"#{settings_target}httplog" => {

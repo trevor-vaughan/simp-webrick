@@ -201,7 +201,7 @@ DOC
       return nil unless Certificate.indirection.find("ca", :fail_on_404 => true) unless ca?
       return nil unless @certificate = Certificate.indirection.find(name)
 
-      validate_certificate_with_key
+      validate_certificate_with_key unless ca?
     end
     @certificate
   end

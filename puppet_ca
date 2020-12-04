@@ -2,5 +2,22 @@
 
 $LOAD_PATH.unshift(File.expand_path(File.join(__dir__, 'lib')))
 
+fork{
+  require 'puppet'
+
+  Puppet.initialize_settings(['--section=master'], false)
+
+  required_directories = [
+    Puppet.settings[:confdir],
+    Puppet.settings[:environmentpath],
+    Puppet.settings[:vardir],
+    Puppet.settings[:logdir]
+  ]
+
+  require 'fileutils'
+  FileUtils.mkdir_p(required_directories)
+  FileUtils.chown_R('puppet', 'puppet', required_directories) if (Process.uid == 0)
+}
+
 require 'puppet/util/command_line'
 Puppet::Util::CommandLine.new('cert', ARGV).execute
