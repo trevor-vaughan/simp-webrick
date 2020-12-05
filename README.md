@@ -55,13 +55,17 @@ bundle exec ruby puppet_server --no-daemonize --debug -v
 
 ##### Standalone Compiler
 
-* podman build --tag "puppet_webrick" --file Dockerfile
-* podman run --hostname puppet -p 8140:8140 -d puppet_webrick
+```sh
+podman build --tag "puppet_webrick" --file Dockerfile
+podman run --hostname puppet -p 8140:8140 -d puppet_webrick
+```
 
 ##### Behind Passenger
 
-* podman build --tag "puppet_passenger" --file Dockerfile.passenger
-* podman run --hostname puppet -p 8140:8140 -d puppet_passenger
+```sh
+podman build --tag "puppet_passenger" --file Dockerfile.passenger
+podman run --hostname puppet -p 8140:8140 -d puppet_passenger
+```
 
 #### Running in minikube
 
