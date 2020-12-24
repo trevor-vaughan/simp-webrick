@@ -67,6 +67,11 @@ module Puppet
     }
   )
 
+  if settings[:ca]
+    settings[:csrdir] = "$ssldir/certificate_requests"
+    settings[:signeddir] = "$ssldir/signed"
+  end
+
   # Work around deprecation notices
   deprecated_settings_to_ignore = [
     :ssl_server_ca_auth,
