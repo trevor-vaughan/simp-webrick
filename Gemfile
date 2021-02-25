@@ -13,3 +13,5 @@ gem 'puppet', ENV.fetch('PUPPET_VERSION', '~> 6.0')
 gem 'rack'
 gem 'pry'
 gem 'pry-byebug'
+gem 'sorted_set'
+gem 'webrick'
