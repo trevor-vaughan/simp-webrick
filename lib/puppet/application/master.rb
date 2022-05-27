@@ -1,5 +1,6 @@
 require 'puppet/master_defaults'
 require 'puppet/application'
+require 'simp/puppet_extensions'
 
 class Puppet::Application::Master < Puppet::Application
 
@@ -231,6 +232,8 @@ Copyright (c) 2012 Puppet Inc., LLC Licensed under the Apache 2.0 License
   end
 
   def setup_ssl
+    require 'puppet/ssl/certificate_authority'
+
     # Configure all of the SSL stuff.
     if Puppet::SSL::CertificateAuthority.ca?
       Puppet::SSL::Host.ca_location = :local

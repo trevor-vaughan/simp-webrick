@@ -8,8 +8,8 @@ gem_sources.each { |gem_source| source gem_source }
 
 gemspec
 
-gem 'puppet', ENV.fetch('PUPPET_VERSION', '~> 6.0')
-#gem 'puma'
+gem 'puppet', ENV.fetch('PUPPET_VERSION', '~> 7.0')
+
 gem 'rack'
 gem 'pry'
 gem 'pry-byebug'

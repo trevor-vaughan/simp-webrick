@@ -35,7 +35,6 @@ module Puppet
       :owner => "service",
       :group => "service",
       :mode => "0660",
-      :create => true,
       :desc => "Where the puppet #{settings_target} web server saves its access log. This is
         only used when running a WEBrick puppet #{settings_target}. When puppet #{settings_target} is
         running under a Rack server like Passenger, that web server will have
