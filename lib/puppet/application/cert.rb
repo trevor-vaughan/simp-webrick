@@ -1,6 +1,7 @@
 require 'puppet/master_defaults'
 require 'puppet/application'
 require 'puppet/ssl/certificate_authority/interface'
+require 'simp/puppet_extensions'
 
 class Puppet::Application::Cert < Puppet::Application
   attr_accessor :all, :ca, :digest, :signed

@@ -1,5 +1,6 @@
 require 'puppet/application/indirection_base'
 require 'puppet/ssl/oids'
+require 'simp/puppet_extensions'
 
 class Puppet::Application::Certificate < Puppet::Application::IndirectionBase
   def setup

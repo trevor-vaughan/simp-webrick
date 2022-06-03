@@ -1,7 +1,7 @@
 # buildah bud --layers --tag puppet_passenger -f Dockerfile.passenger
 # podman run --hostname puppet.int.localdomain -p 8140:8140 -it puppet_passenger
 
-FROM centos:8
+FROM centos:stream8
 
 WORKDIR /home/root/puppetmaster
 
@@ -13,14 +13,13 @@ RUN yum -y install libyaml glibc-headers autoconf gcc gcc-c++ glibc-devel readli
 RUN /opt/puppetlabs/puppet/bin/gem install msgpack --no-document
 
 RUN yum -y install epel-release
-RUN yum -y install mod_passenger mod_ssl httpd-devel passenger-devel
+RUN yum -y install mod_passenger mod_ssl httpd-devel passenger-devel procps-ng
 
 RUN mv /etc/httpd/conf.d/ssl.conf /etc/httpd/conf.d/ssl.bak
 
 RUN sed -i 's|PassengerRoot.*|PassengerRoot /usr/share/ruby/vendor_ruby/phusion_passenger/locations.ini|' /etc/httpd/conf.d/passenger.conf
 
 RUN mkdir /var/run/passenger-instreg
-RUN chown apache /var/run/passenger-instreg
 
 RUN yum -y install ca-certificates
 
@@ -34,14 +33,20 @@ RUN /opt/puppetlabs/puppet/bin/gem install rack --no-document
 
 RUN mkdir -p /usr/share/puppet/server/{public,tmp}
 ADD ext/rack/config.ru /usr/share/puppet/server/config.ru
-RUN chown -R puppet /usr/share/puppet
+RUN chown -R puppet:puppet /usr/share/puppet
 
 ADD puppet_apache.conf /etc/httpd/conf.d/puppet_apache.conf
 
-ADD . /usr/share/puppet_webrick
+ADD lib /usr/share/puppet_webrick/lib
+ADD puppet_server /usr/share/puppet_webrick
+ADD puppet_ca /usr/share/puppet_webrick
+ADD ext /usr/share/puppet_webrick/ext
 
-RUN /usr/share/puppet_webrick/puppet_ca list --all
+RUN mkdir -p /etc/puppetlabs/puppet/ssl/certificate_requests
+RUN chown -R puppet:puppet /etc/puppetlabs/puppet
+RUN chmod -R o-rwx /etc/puppetlabs/puppet
 
-RUN /usr/share/puppet_webrick/puppet_ca generate puppet.int.localdomain
+ADD entrypoint.sh /usr/local
+RUN chmod +x /usr/local/entrypoint.sh
 
-CMD ["/usr/sbin/httpd", "-D", "FOREGROUND"]
+CMD ["/usr/local/entrypoint.sh"]

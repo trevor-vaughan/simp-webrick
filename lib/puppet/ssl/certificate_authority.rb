@@ -140,9 +140,10 @@ class Puppet::SSL::CertificateAuthority
     # to actually save the request anywhere.
     request = Puppet::SSL::CertificateRequest.new(host.name)
 
+
     # We deliberately do not put any subjectAltName in here: the CA
     # certificate absolutely does not need them. --daniel 2011-10-13
-    request.generate(host.key)
+    request.generate(host.key.content)
 
     # Create a self-signed certificate.
     @certificate = sign(host.name, {allow_dns_alt_names: false,
