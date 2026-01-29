@@ -1,0 +1,14 @@
+FROM quay.io/centos/centos:stream10
+
+WORKDIR /root
+
+# Install OpenVox Agent
+RUN yum -y install https://yum.voxpupuli.org/openvox8-release-el-10.noarch.rpm && \
+    yum -y install openvox-agent curl openssl && \
+    yum clean all
+
+# Ensure the agent is in the path
+ENV PATH="/opt/puppetlabs/puppet/bin:${PATH}"
+
+# Keep the container running
+CMD ["tail", "-f", "/dev/null"]

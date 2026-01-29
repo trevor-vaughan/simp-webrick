@@ -88,7 +88,7 @@ class Puppet::Network::HTTP::RackREST
     # that it has already been unescaped, so it is unescaped here.
     if request.path
       # don't use CGI.unescape which mangles space handling
-      URI.unescape(request.path.encode(Encoding::UTF_8))
+      URI::DEFAULT_PARSER.unescape(request.path.encode(Encoding::UTF_8))
     end
   end
 

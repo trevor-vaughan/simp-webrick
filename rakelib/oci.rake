@@ -9,11 +9,11 @@ namespace :oci do
 
     Arguments:
       * :image_name => The name that you wish to give the resulting OCI image
-      * :releasever => The EL release version that you want to support. Defaults to 7
+      * :releasever => The EL release version that you want to support. Defaults to 10
   EOM
   task :image, [:image_name, :releasever] => ['oci/images'] do |t, args|
     args.with_defaults(:image_name => 'simp_puppetmaster')
-    args.with_defaults(:releasever => '7')
+    args.with_defaults(:releasever => '10')
 
     new_container = %x{buildah from scratch}.strip
     tmpdir = %x{buildah unshare -- sh -c 'buildah mount #{new_container}'}.strip

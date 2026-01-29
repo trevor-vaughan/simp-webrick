@@ -1,0 +1,77 @@
+---
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  lint-dockerfiles:
+    name: Lint Dockerfiles
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint Dockerfile (WEBrick)
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+
+      - name: Lint Dockerfile.passenger
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile.passenger
+
+      - name: Lint Dockerfile.client
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile.client
+
+  lint-shell:
+    name: Lint Shell Scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run shellcheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: '.'
+          additional_files: 'entrypoint.master.sh test/integration.sh k8s/minikube-deploy.sh'
+        env:
+          SHELLCHECK_OPTS: >-
+            --severity=warning
+            --exclude=SC1091,SC2312
+
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout simp-webrick
+        uses: actions/checkout@v4
+
+      - name: Checkout Go CA
+        uses: actions/checkout@v4
+        with:
+          repository: trevor-vaughan/golang-puppet-ca
+          path: golang-puppet-ca
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and run integration tests
+        env:
+          PUPPET_CA_SRC: ${{ github.workspace }}/golang-puppet-ca
+          CONTAINER_ENGINE: docker
+        run: test/integration.sh --up
+
+      - name: Dump container logs on failure
+        if: failure()
+        run: |
+          docker compose logs puppet-ca    || true
+          docker compose logs puppet-master || true
+          docker compose logs puppet-client || true

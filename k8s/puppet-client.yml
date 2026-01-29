@@ -1,0 +1,70 @@
+# Puppet agent client — Minikube / Kubernetes
+#
+# The init container resolves the puppet-master Service ClusterIP via
+# in-cluster DNS and writes it to a shared emptyDir volume.  The main
+# container command reads that IP and appends it to /etc/hosts before
+# starting (containerd creates a fresh /etc/hosts per container so the
+# init container cannot write there directly).
+#
+# Images must be loaded before applying:
+#   podman build -t puppet-client:latest -f Dockerfile.client .
+#   minikube image load puppet-client:latest
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: puppet-client
+  labels:
+    app: puppet-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: puppet-client
+  template:
+    metadata:
+      labels:
+        app: puppet-client
+    spec:
+      hostname: client
+      subdomain: localdomain
+      initContainers:
+      - name: setup-hosts
+        image: localhost/puppet-client:latest
+        imagePullPolicy: Never
+        # Resolve puppet-master ClusterIP and store it for the main container.
+        command:
+        - bash
+        - -c
+        - |
+          MASTER_IP=$(getent hosts puppet-master | awk '{print $1}')
+          echo "${MASTER_IP}" > /hosts-data/puppet-master-ip
+          echo "Stored master IP ${MASTER_IP} in /hosts-data/puppet-master-ip"
+        volumeMounts:
+        - name: hosts-data
+          mountPath: /hosts-data
+      containers:
+      - name: puppet-client
+        image: localhost/puppet-client:latest
+        imagePullPolicy: Never
+        env:
+        - name: PATH
+          value: /opt/puppetlabs/puppet/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+        # Patch /etc/hosts with the master IP, then keep the pod alive.
+        command:
+        - bash
+        - -c
+        - |
+          MASTER_IP=$(cat /hosts-data/puppet-master-ip)
+          echo "${MASTER_IP} puppet.passenger.localdomain" >> /etc/hosts
+          echo "Added hosts entry: ${MASTER_IP} puppet.passenger.localdomain"
+          # k8s FQDN is client.localdomain.default.svc.cluster.local; force the
+          # certname to match the compose convention so integration tests pass.
+          puppet config set certname client.localdomain
+          exec tail -f /dev/null
+        volumeMounts:
+        - name: hosts-data
+          mountPath: /hosts-data
+      volumes:
+      - name: hosts-data
+        emptyDir: {}

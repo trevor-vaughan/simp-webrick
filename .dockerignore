@@ -1,0 +1,10 @@
+# Exclude common build/tmp files
+node_modules
+*.log
+*.env
+.git
+.dockerignore
+Dockerfile
+*.md
+tests
+coverage

@@ -1,0 +1,8 @@
+---
+# Hadolint configuration for simp-webrick Dockerfiles.
+# See https://github.com/hadolint/hadolint#configure
+ignore:
+  - DL3033  # Specify version in yum install — not practical for these packages
+  - DL3041  # Specify version in dnf install — same reason
+  - DL3047  # Do not use curl to download repos — repo file download is intentional
+  - SC2046  # Quote to prevent word splitting — intentional use in EPEL URL construction

@@ -1,0 +1,83 @@
+services:
+  puppet-ca:
+    container_name: simp-webrick_puppet-ca_1
+    build:
+      # Build context is the golang-puppet-ca Go project source.
+      # Clone: git clone https://github.com/trevor-vaughan/golang-puppet-ca ../puppet-ca
+      # Override with: PUPPET_CA_SRC=/path/to/golang-puppet-ca podman-compose up
+      # or set PUPPET_CA_SRC in a .env file (see .env.example).
+      context: ${PUPPET_CA_SRC:-../puppet-ca}
+      # Compile the Go CA from source using the official Go toolchain.
+      # This overrides any Dockerfile in the source tree so the build is
+      # reproducible regardless of what Go version the host distro ships.
+      dockerfile_inline: |
+        FROM golang:1.25 AS builder
+        WORKDIR /src
+        COPY go.mod go.sum ./
+        RUN GOTOOLCHAIN=auto go mod download
+        COPY . .
+        RUN GOTOOLCHAIN=auto CGO_ENABLED=0 GOOS=linux \
+            go build -ldflags="-s -w" -o /puppet-ca     ./cmd/puppet-ca/ && \
+            go build -ldflags="-s -w" -o /puppet-ca-ctl ./cmd/puppet-ca-ctl/
+
+        FROM quay.io/centos/centos:stream10
+        # curl: health checks; openssl: CSR generation in integration tests
+        RUN dnf install -y curl openssl && dnf clean all && \
+            useradd -m puppet && \
+            mkdir -p /etc/puppetlabs/puppet/ssl/ca /data && \
+            chown -R puppet:puppet /etc/puppetlabs/puppet /data
+        COPY --from=builder /puppet-ca     /usr/local/bin/puppet-ca
+        COPY --from=builder /puppet-ca-ctl /usr/local/bin/puppet-ca-ctl
+        USER puppet
+        EXPOSE 8140
+        ENTRYPOINT ["/usr/local/bin/puppet-ca"]
+        CMD ["--cadir=/etc/puppetlabs/puppet/ssl/ca", "--autosign-config=true", "-v=1"]
+    hostname: puppet-ca.localdomain
+    command:
+      - "--cadir=/etc/puppetlabs/puppet/ssl/ca"
+      - "--hostname=puppet-ca.localdomain"
+      - "--autosign-config=true"
+      - "-v=1"
+    ports:
+      - "8141:8140"
+    networks:
+      - puppet-net
+    healthcheck:
+      test: ["CMD", "curl", "-sf",
+             "http://localhost:8140/puppet-ca/v1/certificate/ca"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+
+  puppet-master:
+    container_name: simp-webrick_puppet-master_1
+    build:
+      context: .
+      dockerfile: Dockerfile.passenger
+    hostname: puppet.passenger.localdomain
+    environment:
+      - PUPPET_CA_HOST=puppet-ca
+      - PUPPET_CA_PORT=8140
+    ports:
+      - "8140:8140"
+    networks:
+      - puppet-net
+    depends_on:
+      puppet-ca:
+        condition: service_healthy
+
+  puppet-client:
+    container_name: simp-webrick_puppet-client_1
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    hostname: client.localdomain
+    networks:
+      - puppet-net
+    depends_on:
+      - puppet-master
+      - puppet-ca
+
+networks:
+  puppet-net:

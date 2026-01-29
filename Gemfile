@@ -8,7 +8,7 @@ gem_sources.each { |gem_source| source gem_source }
 
 gemspec
 
-gem 'puppet', ENV.fetch('PUPPET_VERSION', '~> 7.0')
+gem 'puppet', ENV.fetch('PUPPET_VERSION', '~> 8.0')
 
 gem 'rack'
 gem 'pry'

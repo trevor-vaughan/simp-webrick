@@ -17,7 +17,9 @@ class Puppet::SSL::Host
   CertificateRevocationList = Puppet::SSL::CertificateRevocationList
 
   extend Puppet::Indirector
-  indirects :certificate_status, :terminus_class => :file, :doc => <<DOC
+  # No :terminus_class set — certificate_status operations are handled by the
+  # Go puppet-ca service and never reach this master's indirector.
+  indirects :certificate_status, :doc => <<DOC
     This indirection represents the host that ties a key, certificate, and certificate request together.
     The indirection key is the certificate CN (generally a hostname).
 DOC
@@ -90,14 +92,10 @@ DOC
   end
 
   CA_MODES = {
-    # Our ca is local, so we use it as the ultimate source of information
-    # And we cache files locally.
-    :local => [:ca, :file],
-    # We're a remote CA client.
-    :remote => [:rest, :file],
-    # We are the CA, so we don't have read/write access to the normal certificates.
-    :only => [:ca],
-    # We have no CA, so we just look in the local file store.
+    # We have no local CA; all CA operations are handled by the Go puppet-ca
+    # service. SSL indirections are routed to disabled_ca termini which reject
+    # any CA requests that reach this master (Apache proxies /puppet-ca away
+    # before Passenger sees it, so this is purely a safety net).
     :none => [:disabled_ca]
   }
 
@@ -164,13 +162,10 @@ DOC
   def generate_certificate_request(options = {})
     generate_key unless key
 
-    # If this CSR is for the current machine...
+    # If this CSR is for the current machine, add any configured dns_alt_names.
     if name == Puppet[:certname].downcase
-      # ...add our configured dns_alt_names
       if Puppet[:dns_alt_names] and Puppet[:dns_alt_names] != ''
         options[:dns_alt_names] ||= Puppet[:dns_alt_names]
-      elsif Puppet::SSL::CertificateAuthority.ca? and fqdn = Facter.value(:fqdn) and domain = Facter.value(:domain)
-        options[:dns_alt_names] = "puppet, #{fqdn}, puppet.#{domain}"
       end
     end
 
@@ -251,12 +246,6 @@ ERROR_STRING
     end
     generate_certificate_request unless existing_request
 
-    # If we can get a CA instance, then we're a valid CA, and we
-    # should use it to sign our request; else, just try to read
-    # the cert.
-    if ! certificate and ca = Puppet::SSL::CertificateAuthority.instance
-      ca.sign(self.name, {allow_dns_alt_names: true})
-    end
   end
 
   def initialize(name = nil)
@@ -357,16 +346,8 @@ ERROR_STRING
   end
 
   def state
-    if certificate_request
-      return 'requested'
-    end
-
-    begin
-      Puppet::SSL::CertificateAuthority.new.verify(name)
-      return 'signed'
-    rescue Puppet::SSL::CertificateAuthority::CertificateVerificationError
-      return 'revoked'
-    end
+    return 'requested' if certificate_request
+    certificate ? 'signed' : 'unknown'
   end
 
   private
@@ -397,4 +378,3 @@ ERROR_STRING
   end
 end
 
-require 'puppet/ssl/certificate_authority'

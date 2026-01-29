@@ -1,0 +1,75 @@
+# Puppet master (Passenger/Apache) — Minikube / Kubernetes
+#
+# Images must be loaded before applying:
+#   podman build -t puppet-master:latest -f Dockerfile.passenger .
+#   minikube image load puppet-master:latest
+#
+# The master bootstraps its TLS cert from the Go CA on first start.
+# SSL state is stored in an emptyDir volume (lost on pod restart).
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: puppet-master
+  labels:
+    app: puppet-master
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: puppet-master
+  template:
+    metadata:
+      labels:
+        app: puppet-master
+    spec:
+      # Give the entrypoint time to bootstrap before the pod is declared ready.
+      # The readiness probe uses a TCP check because the HTTPS cert is issued
+      # by our own CA (not trusted by the kubelet).
+      containers:
+      - name: puppet-master
+        image: localhost/puppet-master:latest
+        imagePullPolicy: Never
+        env:
+        - name: PUPPET_FQDN
+          value: puppet.passenger.localdomain
+        - name: PUPPET_CA_HOST
+          value: puppet-ca
+        - name: PUPPET_CA_PORT
+          value: "8140"
+        ports:
+        - containerPort: 8140
+          name: puppet-https
+        readinessProbe:
+          tcpSocket:
+            port: 8140
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          failureThreshold: 24
+        livenessProbe:
+          tcpSocket:
+            port: 8140
+          initialDelaySeconds: 60
+          periodSeconds: 15
+        volumeMounts:
+        - name: ssl-data
+          mountPath: /etc/puppetlabs/puppet/ssl
+      volumes:
+      - name: ssl-data
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: puppet-master
+  labels:
+    app: puppet-master
+spec:
+  selector:
+    app: puppet-master
+  type: NodePort
+  ports:
+  - name: puppet-https
+    port: 8140
+    targetPort: 8140
+    nodePort: 30140

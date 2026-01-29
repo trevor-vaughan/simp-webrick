@@ -1,0 +1,72 @@
+# Go CA service — Minikube / Kubernetes
+#
+# Images must be loaded before applying:
+#   cd ../puppet-ca && podman build -t puppet-ca:latest .
+#   minikube image load puppet-ca:latest
+#
+# CA state is stored in an emptyDir volume (lost on pod restart — suitable
+# for development).  For production, replace with a PersistentVolumeClaim.
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: puppet-ca
+  labels:
+    app: puppet-ca
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: puppet-ca
+  template:
+    metadata:
+      labels:
+        app: puppet-ca
+    spec:
+      containers:
+      - name: puppet-ca
+        image: localhost/puppet-ca:latest
+        imagePullPolicy: Never
+        args:
+        - "--cadir=/etc/puppetlabs/puppet/ssl/ca"
+        - "--hostname=puppet-ca.localdomain"
+        - "--autosign-config=true"
+        - "-v=1"
+        ports:
+        - containerPort: 8140
+          name: ca-http
+        readinessProbe:
+          httpGet:
+            path: /puppet-ca/v1/certificate/ca
+            port: 8140
+          initialDelaySeconds: 5
+          periodSeconds: 3
+          failureThreshold: 20
+        livenessProbe:
+          httpGet:
+            path: /puppet-ca/v1/certificate/ca
+            port: 8140
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        volumeMounts:
+        - name: ca-data
+          mountPath: /etc/puppetlabs/puppet/ssl/ca
+      volumes:
+      - name: ca-data
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: puppet-ca
+  labels:
+    app: puppet-ca
+spec:
+  selector:
+    app: puppet-ca
+  type: NodePort
+  ports:
+  - name: ca-http
+    port: 8140
+    targetPort: 8140
+    nodePort: 30141

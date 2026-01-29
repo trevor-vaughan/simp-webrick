@@ -1,5 +1,8 @@
 #!/opt/puppetlabs/puppet/bin/ruby
 
+require 'rubygems'
+require 'webrick'
+
 $LOAD_PATH.unshift(File.expand_path(File.join(__dir__, 'lib')))
 
 fork{
