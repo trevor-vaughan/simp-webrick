@@ -19,16 +19,19 @@ jobs:
         uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: Dockerfile
+          config: .hadolint.yaml
 
       - name: Lint Dockerfile.passenger
         uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: Dockerfile.passenger
+          config: .hadolint.yaml
 
       - name: Lint Dockerfile.client
         uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: Dockerfile.client
+          config: .hadolint.yaml
 
   lint-shell:
     name: Lint Shell Scripts
