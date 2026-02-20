@@ -19,19 +19,19 @@ jobs:
         uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: Dockerfile
-          config: .hadolint.yaml
+          ignore: DL3033,DL3041
 
       - name: Lint Dockerfile.passenger
         uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: Dockerfile.passenger
-          config: .hadolint.yaml
+          ignore: DL3033,DL3041
 
       - name: Lint Dockerfile.client
         uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: Dockerfile.client
-          config: .hadolint.yaml
+          ignore: DL3033,DL3041
 
   lint-shell:
     name: Lint Shell Scripts
