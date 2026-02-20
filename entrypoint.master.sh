@@ -59,12 +59,12 @@ if [ ! -f "${PUPPET_SSL}/certs/${fqdn}.pem" ]; then
     HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
         -X PUT \
         -H "Content-Type: text/plain" \
-        --data-binary @/tmp/${fqdn}.csr \
+        --data-binary @/tmp/"${fqdn}".csr \
         "${CA_URL}/puppet-ca/v1/certificate_request/${fqdn}")
     echo "CSR submission HTTP status: ${HTTP_STATUS}"
 
     echo "Waiting for cert to be signed (autosign should be immediate)..."
-    for i in $(seq 1 30); do
+    for _ in $(seq 1 30); do
         if curl -sf "${CA_URL}/puppet-ca/v1/certificate/${fqdn}" \
                 -o "${PUPPET_SSL}/certs/${fqdn}.pem" 2>/dev/null; then
             echo "Server cert obtained for ${fqdn}."

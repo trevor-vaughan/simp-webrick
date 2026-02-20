@@ -17,10 +17,10 @@ COPY --from=builder /opt/puppetlabs/puppet/lib/ruby/gems/3.2.0 /opt/puppetlabs/p
 RUN useradd -m puppet
 
 COPY conf/auth.conf /etc/puppetlabs/puppet/auth.conf
-RUN chown puppet:puppet /etc/puppetlabs/puppet/auth.conf
-RUN chmod o-rwx /etc/puppetlabs/puppet/auth.conf
+RUN chown puppet:puppet /etc/puppetlabs/puppet/auth.conf \
+    && chmod o-rwx /etc/puppetlabs/puppet/auth.conf
 
 COPY . /home/root/puppetmaster
 
 USER puppet
-CMD ./puppet_server --user=puppet --group=puppet --no-daemonize --debug
+CMD ["./puppet_server", "--user=puppet", "--group=puppet", "--no-daemonize", "--debug"]

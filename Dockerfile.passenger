@@ -2,9 +2,10 @@ FROM quay.io/centos/centos:stream10 AS builder
 
 WORKDIR /home/root/puppetmaster
 
-RUN yum -y install https://yum.voxpupuli.org/openvox8-release-el-10.noarch.rpm
-RUN yum -y install openvox-agent
-RUN yum -y install libyaml glibc-headers autoconf gcc gcc-c++ glibc-devel readline-devel make automake libtool bison sqlite-devel
+RUN yum -y install https://yum.voxpupuli.org/openvox8-release-el-10.noarch.rpm \
+    && yum -y install openvox-agent \
+    && yum -y install libyaml glibc-headers autoconf gcc gcc-c++ glibc-devel readline-devel make automake libtool bison sqlite-devel \
+    && yum clean all
 
 RUN /opt/puppetlabs/puppet/bin/gem install msgpack rack --no-document
 
@@ -18,8 +19,9 @@ RUN yum -y install https://yum.voxpupuli.org/openvox8-release-el-10.noarch.rpm &
     yum clean all
 
 # Install EPEL and Passenger
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN dnf install -y dnf-utils && \
-    dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-$(< /etc/redhat-release tr -dc '0-9.'|cut -d \. -f1).noarch.rpm && \
+    dnf install -y "https://dl.fedoraproject.org/pub/epel/epel-release-latest-$(< /etc/redhat-release tr -dc '0-9.'|cut -d \. -f1).noarch.rpm" && \
     dnf config-manager --enable epel && \
     dnf install -y curl && \
     curl --fail -sSLo /etc/yum.repos.d/passenger.repo https://oss-binaries.phusionpassenger.com/yum/definitions/el-passenger.repo && \
@@ -38,17 +40,17 @@ RUN mv /etc/httpd/conf.d/ssl.conf /etc/httpd/conf.d/ssl.bak && \
 # Setup User and Permissions
 RUN useradd -m puppet
 
-ADD ./conf/auth.conf /etc/puppetlabs/puppet/auth.conf
+COPY ./conf/auth.conf /etc/puppetlabs/puppet/auth.conf
 RUN chown puppet:puppet /etc/puppetlabs/puppet/auth.conf && \
     chmod o-rwx /etc/puppetlabs/puppet/auth.conf
 
 # Setup Application
-RUN mkdir -p /usr/share/puppet/server/{public,tmp}
-ADD ext/rack/config_master.ru /usr/share/puppet/server/config.ru
+RUN mkdir -p /usr/share/puppet/server/public /usr/share/puppet/server/tmp
+COPY ext/rack/config_master.ru /usr/share/puppet/server/config.ru
 RUN chown -R puppet:puppet /usr/share/puppet
 
 # Use the master-specific Apache config (includes ProxyPass for Go CA).
-ADD puppet_apache_master.conf /etc/httpd/conf.d/puppet_apache.conf
+COPY puppet_apache_master.conf /etc/httpd/conf.d/puppet_apache.conf
 
 # Enable proxy modules (needed for ProxyPass to Go CA).
 # mod_proxy and mod_proxy_http are included in the httpd package; ensure loaded.
@@ -57,17 +59,17 @@ RUN echo "LoadModule proxy_module modules/mod_proxy.so" \
     echo "LoadModule proxy_http_module modules/mod_proxy_http.so" \
          >> /etc/httpd/conf.modules.d/01-proxy.conf
 
-ADD lib /usr/share/puppet_webrick/lib
-ADD puppet_server /usr/share/puppet_webrick
-ADD puppet_ca /usr/share/puppet_webrick
-ADD ext /usr/share/puppet_webrick/ext
+COPY lib /usr/share/puppet_webrick/lib
+COPY puppet_server /usr/share/puppet_webrick
+COPY puppet_ca /usr/share/puppet_webrick
+COPY ext /usr/share/puppet_webrick/ext
 
 RUN mkdir -p /etc/puppetlabs/puppet/ssl/certificate_requests && \
     chown -R puppet:puppet /etc/puppetlabs/puppet && \
     chmod -R o-rwx /etc/puppetlabs/puppet
 
 # New entrypoint: bootstraps certs from Go CA before starting Apache.
-ADD entrypoint.master.sh /usr/local/entrypoint.sh
+COPY entrypoint.master.sh /usr/local/entrypoint.sh
 RUN chmod +x /usr/local/entrypoint.sh
 
 CMD ["/usr/local/entrypoint.sh"]

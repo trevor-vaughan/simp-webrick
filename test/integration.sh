@@ -303,18 +303,22 @@ _csr_st=$(curl -s -o /dev/null -w '%{http_code}' \
     -H "Content-Type: text/plain" \
     --data-binary @"$WORK_DIR/integ-test.csr" \
     "$CA_URL/puppet-ca/v1/certificate_request/${_INTEG_HOST}") || true
-[[ "$_csr_st" =~ ^2 ]] \
-    && pass "CSR submission returns 2xx" \
-    || fail "CSR submission returns 2xx" "got HTTP $_csr_st"
+if [[ "$_csr_st" =~ ^2 ]]; then
+    pass "CSR submission returns 2xx"
+else
+    fail "CSR submission returns 2xx" "got HTTP $_csr_st"
+fi
 
 sleep 1   # autosign is immediate but give it a moment
 
 _status_body=$(curl -s \
     "$CA_URL/puppet-ca/v1/certificate_status/${_INTEG_HOST}" \
     2>/dev/null) || true
-grep -qF '"state":"signed"' <<< "$_status_body" \
-    && pass "Autosigned cert status is 'signed'" \
-    || fail "Autosigned cert status is 'signed'" "got: $_status_body"
+if grep -qF '"state":"signed"' <<< "$_status_body"; then
+    pass "Autosigned cert status is 'signed'"
+else
+    fail "Autosigned cert status is 'signed'" "got: $_status_body"
+fi
 
 if curl -sf "$CA_URL/puppet-ca/v1/certificate/${_INTEG_HOST}" \
         -o "$WORK_DIR/integ-test.crt" 2>/dev/null; then
@@ -335,16 +339,20 @@ _revoke_st=$(curl -s -o /dev/null -w '%{http_code}' \
     -H "Content-Type: application/json" \
     -d '{"desired_state":"revoked"}' \
     "$CA_URL/puppet-ca/v1/certificate_status/${_INTEG_HOST}") || true
-[[ "$_revoke_st" =~ ^2 ]] \
-    && pass "Cert revocation returns 2xx" \
-    || fail "Cert revocation returns 2xx" "got HTTP $_revoke_st"
+if [[ "$_revoke_st" =~ ^2 ]]; then
+    pass "Cert revocation returns 2xx"
+else
+    fail "Cert revocation returns 2xx" "got HTTP $_revoke_st"
+fi
 
 _revoked_body=$(curl -s \
     "$CA_URL/puppet-ca/v1/certificate_status/${_INTEG_HOST}" \
     2>/dev/null) || true
-grep -qF '"state":"revoked"' <<< "$_revoked_body" \
-    && pass "Revoked cert status is 'revoked'" \
-    || fail "Revoked cert status is 'revoked'" "got: $_revoked_body"
+if grep -qF '"state":"revoked"' <<< "$_revoked_body"; then
+    pass "Revoked cert status is 'revoked'"
+else
+    fail "Revoked cert status is 'revoked'" "got: $_revoked_body"
+fi
 
 # ═════════════════════════════════════════════════════════════════════════════
 # Group 2 — CA proxy through Puppet master (HTTPS port 8140)
@@ -381,9 +389,11 @@ _proxy_st=$(curl -s -o /dev/null -w '%{http_code}' \
     -H "Content-Type: text/plain" \
     --data-binary @"$WORK_DIR/proxy-test.csr" \
     "$MASTER_URL/puppet-ca/v1/certificate_request/${_PROXY_HOST}") || true
-[[ "$_proxy_st" =~ ^2 ]] \
-    && pass "CSR via proxy returns 2xx" \
-    || fail "CSR via proxy returns 2xx" "got HTTP $_proxy_st"
+if [[ "$_proxy_st" =~ ^2 ]]; then
+    pass "CSR via proxy returns 2xx"
+else
+    fail "CSR via proxy returns 2xx" "got HTTP $_proxy_st"
+fi
 
 sleep 1
 
@@ -423,21 +433,29 @@ exec_client rm -rf /etc/puppetlabs/puppet/ssl 2>/dev/null || true
 AGENT_EXIT=0
 AGENT_OUT=$(run_agent --waitforcert 30) || AGENT_EXIT=$?
 
-[[ "$AGENT_EXIT" =~ ^(0|2)$ ]] \
-    && pass "Puppet agent exits 0 or 2" \
-    || fail "Puppet agent exits 0 or 2" "exit code: $AGENT_EXIT"
+if [[ "$AGENT_EXIT" =~ ^(0|2)$ ]]; then
+    pass "Puppet agent exits 0 or 2"
+else
+    fail "Puppet agent exits 0 or 2" "exit code: $AGENT_EXIT"
+fi
 
-grep -qiE "crl|revocation" <<< "$AGENT_OUT" \
-    && pass "Agent output references CRL" \
-    || fail "Agent output references CRL" "no CRL mention in output"
+if grep -qiE "crl|revocation" <<< "$AGENT_OUT"; then
+    pass "Agent output references CRL"
+else
+    fail "Agent output references CRL" "no CRL mention in output"
+fi
 
-grep -qi "certificate" <<< "$AGENT_OUT" \
-    && pass "Agent output references certificate" \
-    || fail "Agent output references certificate" "no certificate mention in output"
+if grep -qi "certificate" <<< "$AGENT_OUT"; then
+    pass "Agent output references certificate"
+else
+    fail "Agent output references certificate" "no certificate mention in output"
+fi
 
-grep -qi "Applied catalog" <<< "$AGENT_OUT" \
-    && pass "Agent output contains 'Applied catalog'" \
-    || fail "Agent output contains 'Applied catalog'" "not found in output"
+if grep -qi "Applied catalog" <<< "$AGENT_OUT"; then
+    pass "Agent output contains 'Applied catalog'"
+else
+    fail "Agent output contains 'Applied catalog'" "not found in output"
+fi
 
 if grep -qiE "SSL_read|certificate revoked" <<< "$AGENT_OUT"; then
     fail "Agent output contains no SSL errors" "found SSL/revocation error in output"
@@ -486,10 +504,12 @@ if [[ -f "$WORK_DIR/client.crt" && -f "$WORK_DIR/client.key" ]]; then
         "$MASTER_URL/puppet/v3/file_metadatas/plugins?recurse=false&links=manage&checksum_type=sha256&source_permissions=ignore&environment=production"
 
     AGENT2_EXIT=0
-    AGENT2_OUT=$(run_agent) || AGENT2_EXIT=$?
-    [[ "$AGENT2_EXIT" =~ ^(0|2)$ ]] \
-        && pass "Second agent run (idempotency) exits 0 or 2" \
-        || fail "Second agent run (idempotency) exits 0 or 2" "exit code: $AGENT2_EXIT"
+    _AGENT2_OUT=$(run_agent) || AGENT2_EXIT=$?
+    if [[ "$AGENT2_EXIT" =~ ^(0|2)$ ]]; then
+        pass "Second agent run (idempotency) exits 0 or 2"
+    else
+        fail "Second agent run (idempotency) exits 0 or 2" "exit code: $AGENT2_EXIT"
+    fi
 else
     for _desc in \
         "Node endpoint returns 200" \
@@ -542,9 +562,11 @@ _client_revoke_st=$(curl -s -o /dev/null -w '%{http_code}' \
     -H "Content-Type: application/json" \
     -d '{"desired_state":"revoked"}' \
     "$CA_URL/puppet-ca/v1/certificate_status/client.localdomain") || true
-[[ "$_client_revoke_st" =~ ^2 ]] \
-    && pass "Client cert revocation returns 2xx" \
-    || fail "Client cert revocation returns 2xx" "got HTTP $_client_revoke_st"
+if [[ "$_client_revoke_st" =~ ^2 ]]; then
+    pass "Client cert revocation returns 2xx"
+else
+    fail "Client cert revocation returns 2xx" "got HTTP $_client_revoke_st"
+fi
 
 # Refresh master CRL to include the newly revoked client cert
 refresh_master_crl || true
